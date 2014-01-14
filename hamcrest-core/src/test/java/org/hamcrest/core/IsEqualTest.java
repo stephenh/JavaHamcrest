@@ -9,8 +9,12 @@ import static org.hamcrest.AbstractMatcherTest.assertNullSafe;
 import static org.hamcrest.AbstractMatcherTest.assertUnknownTypeSafe;
 import static org.hamcrest.core.IsEqual.equalTo;
 
+import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.hamcrest.StringDescription;
+import org.junit.ComparisonFailure;
 import org.junit.Test;
+import org.junit.Assert;
 
 public final class IsEqualTest {
 
@@ -131,6 +135,19 @@ public final class IsEqualTest {
     @Test public void
     returnsGoodDescriptionIfCreatedWithNullReference() {
         assertDescription("null", equalTo(null));
+    }
+
+    @Test public void
+    throwsComparisonFailureForStrings() {
+        final Matcher<String> matcher = equalTo("foo");
+        assertDoesNotMatch(matcher, "bar");
+        try {
+            matcher.describeMismatch("bar", new StringDescription());
+            Assert.fail();
+        } catch (ComparisonFailure fe) {
+            Assert.assertEquals("bar", fe.getActual());
+            Assert.assertEquals("foo", fe.getExpected());
+        }
     }
 }
 

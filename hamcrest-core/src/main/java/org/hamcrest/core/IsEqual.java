@@ -8,6 +8,8 @@ import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 
 /**
@@ -29,6 +31,26 @@ public class IsEqual<T> extends BaseMatcher<T> {
     @Override
     public void describeTo(Description description) {
         description.appendValue(expectedValue);
+    }
+
+    @Override
+    public void describeMismatch(Object item, Description description) {
+        super.describeMismatch(item, description);
+        // the NullDescription check is because TypeSafeDiagnosingMatcher abuses it's matchesSafetly method
+        // for both "matches" (by passing a NullDescription) and "describeMismatch".
+        if (item instanceof String && expectedValue instanceof String && !(description instanceof Description.NullDescription)) {
+            try {
+                Class<?> c = Class.forName("org.junit.ComparisonFailure");
+                Constructor<?> cstr = c.getConstructor(String.class, String.class, String.class);
+                throw (Error) cstr.newInstance(description.toString(), expectedValue, item);
+            } catch (IllegalAccessException e) {
+            } catch (InstantiationException e) {
+            } catch (InvocationTargetException e) {
+            } catch (NoSuchMethodException e) {
+            } catch (ClassNotFoundException e) {
+                // no fancy eclipse popup, that's okay
+            }
+        }
     }
 
     private static boolean areEqual(Object actual, Object expected) {
